@@ -10,6 +10,7 @@ A modern web-based holiday tracking application built with React, TypeScript, an
 - 📱 Responsive design
 - 📱 Mobile-friendly interface
 
+
 ## Tech Stack
 
 - **Frontend**: React 18, TypeScript
@@ -63,3 +64,12 @@ src/
 ├── styles/              # Global styles
 └── utils/               # Utility functions
 ```
+
+
+## License
+
+ISC
+
+## Author
+
+Ajmal Rasouli
