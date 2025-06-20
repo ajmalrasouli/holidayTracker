@@ -5,7 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 import './App.css';
 import CalendarView from './components/calendar/CalendarView';
 import MyRequests from './components/requests/MyRequests';
-import NewRequest from './components/requests/NewRequest';
+import LeaveRequestWizard from './components/requests/LeaveRequestWizard';
 import Dashboard from './components/dashboard/Dashboard';
 import { HolidayProvider, useHoliday } from './context/HolidayContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -228,7 +228,7 @@ function App() {
                 } />
                 <Route path="/new-request" element={
                   <ProtectedRoute>
-                    <NewRequest />
+                    <LeaveRequestWizard />
                   </ProtectedRoute>
                 } />
               </Routes>

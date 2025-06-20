@@ -19,7 +19,15 @@ export interface Holiday {
   borderColor?: string;
   extendedProps: {
     type: string;
-    status: string;
+    status: 'pending' | 'approved' | 'rejected';
+    notes?: string;
+    attachment?: string | null;
+    requestedAt?: string;
+    requestedBy?: string | null;
+    approvedAt?: string | null;
+    rejectedAt?: string | null;
+    approvedBy?: string | null;
+    rejectedBy?: string | null;
   };
 }
 
