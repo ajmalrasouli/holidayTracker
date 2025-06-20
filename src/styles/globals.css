@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles can be added below */
+
+/* Base styles */
+body {
+  @apply bg-gray-50 text-gray-900;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Custom components */
+.btn {
+  @apply px-4 py-2 rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+.btn-primary {
+  @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+}
+
+/* Dashboard specific styles */
+.dashboard-card {
+  @apply bg-white rounded-lg shadow-sm p-6 transition-all duration-200 border border-gray-100 hover:shadow-md hover:border-primary-100;
+}
+
+.welcome-card {
+  @apply bg-gradient-to-r from-primary-600 to-primary-800 text-white rounded-xl p-8 shadow-lg overflow-hidden relative;
+}
+
+.welcome-card::before {
+  content: '';
+  @apply absolute -top-1/2 -right-1/2 w-[200%] h-[200%] bg-radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%) rotate-30 transition-transform duration-500;
+  pointer-events: none;
+}
+
+.welcome-card:hover::before {
+  transform: rotate(45deg);
+}
+
+/* Add more custom styles as needed */

@@ -1,0 +1,80 @@
+/*! @import */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+.dashboard {
+  @apply p-6 max-w-7xl mx-auto min-h-[calc(100vh-64px)];
+}
+
+.dashboard-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+}
+
+.welcome-card {
+  @apply bg-gradient-to-r from-primary-600 to-primary-800 text-white rounded-xl p-8 shadow-lg overflow-hidden relative col-span-1 md:col-span-2 lg:col-span-3;
+}
+
+.dashboard-card {
+  @apply bg-white rounded-lg shadow-sm p-6 transition-all duration-200 border border-gray-100 hover:shadow-md hover:border-primary-100;
+}
+
+.remaining-leave {
+  @apply bg-gradient-to-br from-primary-500 to-primary-700 text-white;
+}
+
+.quick-actions {
+  @apply space-y-4;
+}
+
+.upcoming-leaves {
+  @apply col-span-1 md:col-span-2 lg:col-span-3;
+}
+
+.section-header {
+  @apply flex justify-between items-center mb-4;
+}
+
+.view-all {
+  @apply text-sm text-primary-600 hover:text-primary-800 flex items-center gap-1;
+}
+
+.upcoming-leaves-list {
+  @apply space-y-3;
+}
+
+.upcoming-leave-item {
+  @apply flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors;
+}
+
+.leave-date {
+  @apply w-16 flex-shrink-0 text-center;
+}
+
+.leave-details {
+  @apply flex-1 min-w-0 px-3;
+}
+
+.leave-type {
+  @apply font-medium text-gray-900 truncate;
+}
+
+.leave-notes {
+  @apply text-sm text-gray-500 truncate;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard {
+    @apply p-4;
+  }
+  
+  .welcome-card {
+    @apply p-6;
+  }
+  
+  .dashboard-card {
+    @apply p-4;
+  }
+}
