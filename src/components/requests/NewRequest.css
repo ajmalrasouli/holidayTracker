@@ -16,6 +16,23 @@
 .form-group label {
   font-weight: 600;
   margin-bottom: 0.25rem;
+  color: #2c3e50;
+}
+
+select.form-control {
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  background-color: white;
+  color: #2c3e50;
+}
+
+select.form-control:focus {
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
 .form-check {

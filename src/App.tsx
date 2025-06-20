@@ -58,7 +58,9 @@ const Sidebar: React.FC<{ activeView: string; setActiveView: (view: string) => v
         <div className="user-info">
           {user.picture && <img src={user.picture} alt={user.name} className="user-avatar" />}
           <div className="user-details">
-            <span className="user-name">{user.name}</span>
+            <span className="user-name">
+              {user.name ? user.name.split(' ')[0] : user.email.split('@')[0]}
+            </span>
             <span className="user-email">{user.email}</span>
           </div>
         </div>

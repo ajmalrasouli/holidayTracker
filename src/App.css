@@ -73,6 +73,37 @@ body {
   color: var(--secondary-color);
 }
 
+.user-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin-right: 12px;
+  object-fit: cover;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 600;
+  color: var(--secondary-color);
+  margin-bottom: 2px;
+}
+
+.user-email {
+  font-size: 0.85em;
+  color: var(--text-light);
+}
+
 .stats {
   margin-top: 20px;
 }
