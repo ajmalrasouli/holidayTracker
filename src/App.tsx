@@ -6,10 +6,11 @@ import './App.css';
 import CalendarView from './components/calendar/CalendarView';
 import MyRequests from './components/requests/MyRequests';
 import NewRequest from './components/requests/NewRequest';
+import Dashboard from './components/dashboard/Dashboard';
 import { HolidayProvider, useHoliday } from './context/HolidayContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCalendarAlt, faFileAlt, faSignOutAlt, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
+import { faCalendarAlt, faFileAlt, faSignOutAlt, faPlusCircle, faHome } from '@fortawesome/free-solid-svg-icons';
 
 // Sidebar Component
 const Sidebar: React.FC<{ activeView: string; setActiveView: (view: string) => void }> = ({ activeView, setActiveView }) => {
@@ -44,7 +45,7 @@ const Sidebar: React.FC<{ activeView: string; setActiveView: (view: string) => v
 
   const handleNavigation = (view: string) => {
     setActiveView(view);
-    navigate(view === 'calendar' ? '/' : `/${view}`);
+    navigate(view === 'dashboard' ? '/' : `/${view}`);
   };
 
   const handleLogout = () => {
@@ -82,11 +83,18 @@ const Sidebar: React.FC<{ activeView: string; setActiveView: (view: string) => v
 
       <div className="nav-buttons">
         <button 
+          className={`nav-button ${activeView === 'dashboard' ? 'active' : ''}`}
+          onClick={() => handleNavigation('dashboard')}
+        >
+          <FontAwesomeIcon icon={faHome} />
+          <span>DASHBOARD</span>
+        </button>
+        <button 
           className={`nav-button ${activeView === 'new-request' ? 'active' : ''}`}
           onClick={() => handleNavigation('new-request')}
         >
           <FontAwesomeIcon icon={faPlusCircle} />
-          <span>MAKE NEW REQUEST</span>
+          <span>NEW REQUEST</span>
         </button>
         <button 
           className={`nav-button ${activeView === 'calendar' ? 'active' : ''}`}
@@ -183,7 +191,7 @@ type CredentialResponse = {
 };
 
 function App() {
-  const [activeView, setActiveView] = useState('calendar');
+  const [activeView, setActiveView] = useState('dashboard');
   const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
 
   if (!clientId) {
@@ -204,6 +212,11 @@ function App() {
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/" element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/calendar" element={
                   <ProtectedRoute>
                     <CalendarView />
                   </ProtectedRoute>
