@@ -27,6 +27,7 @@ import Dashboard from './components/dashboard/Dashboard';
 import CalendarView from './components/calendar/CalendarView';
 import MyRequests from './components/requests/MyRequests';
 import LeaveRequestWizard from './components/requests/LeaveRequestWizard';
+import SetupWizard from './components/setup/SetupWizard';
 import './styles/theme.css';
 
 // Sidebar Component
@@ -190,11 +191,24 @@ interface CredentialResponse {
 };
 
 const AppContent = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, completeSetup } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [activeView, setActiveView] = useState('dashboard');
+  const [showSetupWizard, setShowSetupWizard] = useState(false);
   const navigate = useNavigate();
+
+  // Check if we need to show setup wizard for new users
+  useEffect(() => {
+    if (user && user.setupComplete === false) {
+      setShowSetupWizard(true);
+    }
+  }, [user]);
+
+  const handleSetupComplete = () => {
+    completeSetup();
+    setShowSetupWizard(false);
+  };
 
   // Check if mobile view
   useEffect(() => {
@@ -246,6 +260,13 @@ const AppContent = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      {/* Setup Wizard for New Users */}
+      {showSetupWizard && user && (
+        <SetupWizard 
+          onComplete={handleSetupComplete} 
+          user={{ name: user.name, email: user.email }}
+        />
+      )}
       {/* Mobile sidebar backdrop */}
       {isMobile && sidebarOpen && (
         <div 

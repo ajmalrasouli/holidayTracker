@@ -1,14 +1,15 @@
-import React, {
+﻿import React, {
   createContext,
   useContext,
   useState,
   useEffect,
   ReactNode,
 } from 'react';
+import { useAuth } from './AuthContext';
 
-/* ────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Types
-   ──────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export interface Holiday {
   id: string;
   title: string;
@@ -38,28 +39,36 @@ interface HolidayContextType {
   updateHoliday: (id: string, updates: Partial<Holiday>) => void;
 }
 
-/* ────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Context
-   ──────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const HolidayContext = createContext<HolidayContextType | undefined>(
   undefined,
 );
 
-/* ────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Provider
-   ──────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export const HolidayProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  // Load initial data from localStorage
-  const [holidays, setHolidays] = useState<Holiday[]>(() => {
-    try {
-      const stored = localStorage.getItem('holidays');
-      return stored ? (JSON.parse(stored) as Holiday[]) : [];
-    } catch {
-      return [];
+  const { user } = useAuth();
+  
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
+  
+  // Load holidays when user changes
+  useEffect(() => {
+    if (user) {
+      try {
+        const stored = localStorage.getItem(`holidays_${user.email}`);
+        setHolidays(stored ? (JSON.parse(stored) as Holiday[]) : []);
+      } catch {
+        setHolidays([]);
+      }
+    } else {
+      setHolidays([]);
     }
-  });
+  }, [user]);
 
   /* CRUD helpers */
   const addHoliday = (holiday: Omit<Holiday, 'id'>) => {
@@ -83,12 +92,14 @@ export const HolidayProvider: React.FC<{ children: ReactNode }> = ({
 
   /* Persist on every change */
   useEffect(() => {
-    try {
-      localStorage.setItem('holidays', JSON.stringify(holidays));
-    } catch {
-      /* ignore storage failures */
+    if (user) {
+      try {
+        localStorage.setItem(`holidays_${user.email}`, JSON.stringify(holidays));
+      } catch {
+        /* ignore storage failures */
+      }
     }
-  }, [holidays]);
+  }, [holidays, user]);
 
   return (
     <HolidayContext.Provider
@@ -99,9 +110,9 @@ export const HolidayProvider: React.FC<{ children: ReactNode }> = ({
   );
 };
 
-/* ────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Hook
-   ──────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export const useHoliday = (): HolidayContextType => {
   const ctx = useContext(HolidayContext);
   if (!ctx)
