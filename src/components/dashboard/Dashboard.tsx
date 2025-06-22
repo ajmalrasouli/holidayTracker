@@ -123,7 +123,7 @@ const Dashboard: React.FC = () => {
               </p>
             </div>
             <Link 
-              to="/request-leave" 
+              to="/new-request" 
               className="inline-flex items-center justify-center px-5 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg text-white font-medium transition-all duration-200 border border-white/20 hover:shadow-lg whitespace-nowrap"
             >
               <FontAwesomeIcon icon={faPlus} className="mr-2" />
@@ -267,7 +267,7 @@ const Dashboard: React.FC = () => {
                 <h2 className="text-xl font-semibold text-gray-800 mb-6">Quick Actions</h2>
                 <div className="space-y-3">
                   <Link 
-                    to="/request-leave" 
+                    to="/new-request" 
                     className="flex items-center p-4 bg-primary-50 hover:bg-primary-100 text-primary-700 rounded-lg transition-colors"
                   >
                     <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center mr-3">
@@ -291,7 +291,7 @@ const Dashboard: React.FC = () => {
                     </div>
                   </Link>
                   <Link 
-                    to="/team" 
+                    to="/calendar" 
                     className="flex items-center p-4 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg transition-colors"
                   >
                     <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">

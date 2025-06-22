@@ -10,7 +10,11 @@ type LeaveType = 'Annual Leave' | 'Sick Leave' | 'Unpaid Leave' | 'Maternity Lea
 type LeaveDuration = 'full-day' | 'half-day' | 'multiple-days';
 type HalfDayOption = 'morning' | 'afternoon';
 
-const LeaveRequestWizard: React.FC = () => {
+interface LeaveRequestWizardProps {
+  // Add any props if needed
+}
+
+const LeaveRequestWizard: React.FC<LeaveRequestWizardProps> = () => {
   const { addHoliday } = useHoliday();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -45,48 +49,68 @@ const LeaveRequestWizard: React.FC = () => {
   const prevStep = () => setStep(step - 1);
 
   const { user } = useAuth();
-  
+
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<boolean>(false);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const leaveTitle = `${formData.leaveType} Request`;
-    const startDate = new Date(formData.startDate);
-    const endDate = formData.duration === 'multiple-days' ? new Date(formData.endDate) : startDate;
+    setError(null);
+    setSuccess(false);
 
-    // Adjust for half-day if needed
-    if (formData.duration === 'half-day') {
-      if (formData.halfDayOption === 'afternoon') {
-        startDate.setHours(13, 0, 0, 0);
-      } else {
-        startDate.setHours(9, 0, 0, 0);
-        endDate.setHours(13, 0, 0, 0);
+    try {
+      const leaveTitle = `${formData.leaveType} Request`;
+      const startDate = new Date(formData.startDate);
+      const endDate = formData.duration === 'multiple-days' ? new Date(formData.endDate) : startDate;
+
+      // Validate dates
+      if (isNaN(startDate.getTime())) {
+        throw new Error('Start date is invalid');
       }
+      if (formData.duration === 'multiple-days' && isNaN(endDate.getTime())) {
+        throw new Error('End date is invalid');
+      }
+      if (endDate < startDate) {
+        throw new Error('End date must be after start date');
+      }
+
+      // Adjust for half-day if needed
+      if (formData.duration === 'half-day') {
+        if (formData.halfDayOption === 'afternoon') {
+          startDate.setHours(13, 0, 0, 0);
+        } else {
+          startDate.setHours(9, 0, 0, 0);
+          endDate.setHours(13, 0, 0, 0);
+        }
+      }
+
+      const newHoliday: Omit<Holiday, 'id'> = {
+        title: leaveTitle,
+        start: startDate.toISOString(),
+        end: endDate.toISOString(),
+        allDay: formData.duration === 'full-day' || formData.duration === 'multiple-days',
+        backgroundColor: getLeaveTypeColor(formData.leaveType),
+        borderColor: getLeaveTypeBorderColor(formData.leaveType),
+        extendedProps: {
+          type: formData.leaveType.toLowerCase().replace(' ', '-'),
+          status: 'pending',
+          notes: formData.notes,
+          attachment: formData.attachment ? formData.attachment.name : null,
+          requestedAt: new Date().toISOString(),
+          requestedBy: user?.name || 'System',
+          approvedAt: null,
+          approvedBy: null,
+          rejectedAt: null,
+          rejectedBy: null,
+        },
+      };
+      
+      addHoliday(newHoliday);
+      setSuccess(true);
+      navigate('/my-requests');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred while submitting your request');
     }
-
-    const newHoliday: Omit<Holiday, 'id'> = {
-      title: leaveTitle,
-      start: startDate.toISOString(),
-      end: endDate.toISOString(),
-      allDay: formData.duration === 'full-day' || formData.duration === 'multiple-days',
-      backgroundColor: getLeaveTypeColor(formData.leaveType),
-      borderColor: getLeaveTypeBorderColor(formData.leaveType),
-      extendedProps: {
-        type: formData.leaveType.toLowerCase().replace(' ', '-'),
-        status: 'pending',
-        notes: formData.notes,
-        attachment: formData.attachment ? formData.attachment.name : null,
-        requestedAt: new Date().toISOString(),
-        requestedBy: user?.name || 'System',
-        approvedAt: null,
-        approvedBy: null,
-        rejectedAt: null,
-        rejectedBy: null,
-      },
-    };
-    
-    addHoliday(newHoliday);
-
-    navigate('/my-requests');
   };
 
   const getLeaveTypeColor = (type: LeaveType): string => {
@@ -113,7 +137,6 @@ const LeaveRequestWizard: React.FC = () => {
     return colors[type] || '#f8bbd0';
   };
 
-  // Step 1: Leave Type Selection
   const Step1 = () => (
     <div className="step-content">
       <h3>Select Leave Type</h3>
@@ -153,7 +176,6 @@ const LeaveRequestWizard: React.FC = () => {
     </div>
   );
 
-  // Step 2: Date Selection
   const Step2 = () => (
     <div className="step-content">
       <h3>When do you want to take leave?</h3>
@@ -265,7 +287,6 @@ const LeaveRequestWizard: React.FC = () => {
     </div>
   );
 
-  // Step 3: Additional Information
   const Step3 = () => (
     <div className="step-content">
       <h3>Additional Information</h3>
@@ -323,7 +344,6 @@ const LeaveRequestWizard: React.FC = () => {
     </div>
   );
 
-  // Progress Steps
   const steps = [
     { number: 1, label: 'Leave Type' },
     { number: 2, label: 'Dates' },
@@ -332,7 +352,16 @@ const LeaveRequestWizard: React.FC = () => {
 
   return (
     <div className="leave-request-wizard">
-      <h2>New Leave Request</h2>
+      <div className="wizard-header">
+        <button
+          type="button"
+          className="back-button"
+          onClick={() => navigate(-1)}
+        >
+          <FontAwesomeIcon icon={faArrowLeft} /> Back
+        </button>
+        <h2>Request Leave</h2>
+      </div>
       
       <div className="progress-steps">
         {steps.map((stepItem, index) => (
@@ -346,7 +375,18 @@ const LeaveRequestWizard: React.FC = () => {
         ))}
       </div>
 
-      <form onSubmit={handleSubmit} className="leave-request-form">
+      {error && (
+        <div className="error-message">
+          <p>{error}</p>
+        </div>
+      )}
+      {success && (
+        <div className="success-message">
+          <p>Your leave request has been submitted successfully!</p>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="wizard-form">
         {step === 1 && <Step1 />}
         {step === 2 && <Step2 />}
         {step === 3 && <Step3 />}
