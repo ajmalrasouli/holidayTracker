@@ -1,23 +1,28 @@
 # Holiday Tracker
 
-A modern web-based holiday tracking application built with React, TypeScript, and FullCalendar.
+A modern web-based holiday tracking application built with React, TypeScript, and a modern UI stack.
 
 ## Features
 
-- 📅 Interactive calendar view
-- 📊 Holiday statistics and tracking
-- 👤 User profile management
-- 📱 Responsive design
-- 📱 Mobile-friendly interface
-
+- 📅 Interactive calendar view with team visibility
+- 📊 Detailed leave balance tracking
+- 👤 User profile and settings management
+- 📱 Fully responsive design
+- 📱 Mobile-friendly interface with sidebar toggle
+- 📊 Leave type statistics and progress tracking
+- 📅 Upcoming leave requests overview
 
 ## Tech Stack
 
 - **Frontend**: React 18, TypeScript
-- **UI Components**: Bootstrap 5, Font Awesome
+- **UI Components**: 
+  - Tailwind CSS with Shadcn/ui
+  - Custom components with modern design system
 - **Calendar**: FullCalendar
 - **State Management**: React Context API
-- **Routing**: React Router
+- **Routing**: React Router with Wouter
+- **Icons**: Font Awesome
+- **Date Handling**: date-fns
 
 ## Getting Started
 
@@ -26,25 +31,14 @@ A modern web-based holiday tracking application built with React, TypeScript, an
    ```bash
    npm install
    ```
-3. Set up Google OAuth:
-   - Go to the [Google Cloud Console](https://console.cloud.google.com/)
-   - Create a new project or select an existing one
-   - Navigate to "APIs & Services" > "Credentials"
-   - Click "Create Credentials" and select "OAuth client ID"
-   - Configure the consent screen if prompted
-   - For "Application type", select "Web application"
-   - Add `http://localhost:3000` to "Authorized JavaScript origins"
-   - Add `http://localhost:3000` to "Authorized redirect URIs" (don't include the /* at the end)
-   - Click "Create" and copy the Client ID
-   - Create a `.env` file in the project root and add:
-     ```
-     REACT_APP_GOOGLE_CLIENT_ID=your_client_id_here
-     ```
+3. Configure environment:
+   - Create a `.env` file in the project root
+   - Add required environment variables (e.g., Google OAuth client ID)
 4. Start the development server:
    ```bash
    npm start
    ```
-4. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+4. Access the application at [http://localhost:3000](http://localhost:3000)
 
 ## Available Scripts
 
@@ -55,16 +49,19 @@ A modern web-based holiday tracking application built with React, TypeScript, an
 
 ## Project Structure
 
-```
+```bash
 src/
 ├── components/           # Reusable components
-│   ├── calendar/        # Calendar related components
-│   └── requests/        # Request management components
+│   ├── dashboard/       # Dashboard components
+│   ├── requests/        # Leave request components
+│   └── ui/             # Shared UI components
 ├── context/             # React context providers
+├── utils/               # Utility functions
+│   └── leaveUtils.ts    # Leave type utilities
 ├── styles/              # Global styles
-└── utils/               # Utility functions
+│   └── App.css          # Global theme and variables
+└── types/               # TypeScript type definitions
 ```
-
 
 ## License
 
@@ -73,3 +70,7 @@ ISC
 ## Author
 
 Ajmal Rasouli
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a pull request.
