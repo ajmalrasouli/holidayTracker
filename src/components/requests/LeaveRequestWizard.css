@@ -194,14 +194,20 @@
 
 .input-with-icon {
   position: relative;
-  display: flex;
-  align-items: center;
 }
 
-.input-with-icon svg {
+.input-with-icon.textarea-container {
+  display: block;
+  position: relative;
+}
+
+.input-with-icon.textarea-container svg {
   position: absolute;
   left: 12px;
+  top: 12px;
   color: #6c757d;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .input-with-icon input[type="date"],
@@ -214,13 +220,30 @@
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
-.input-with-icon textarea {
-  min-height: 100px;
-  resize: vertical;
+.input-with-icon .notes-icon {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  color: #6c757d;
 }
 
-.input-with-icon input[type="date"]:focus,
-.input-with-icon textarea:focus {
+.notes-textarea {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+  line-height: 1.5;
+  font-family: inherit;
+  background: white;
+  color: #212529;
+  resize: vertical;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.notes-textarea:focus {
   border-color: #80bdff;
   outline: 0;
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
@@ -254,6 +277,10 @@
 
 .file-upload-label svg {
   color: #6c757d;
+}
+
+.file-upload input[type="file"] {
+  display: none;
 }
 
 .btn-text {
@@ -327,6 +354,40 @@
 .btn-secondary:hover {
   background-color: #5a6268;
   border-color: #545b62;
+}
+
+/* New styles for form textarea */
+.form-control {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #212529;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+  color: #212529;
+  background-color: #fff;
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.textarea-wrapper {
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+textarea.form-control {
+  min-height: 120px;
+  resize: vertical;
+  font-family: inherit;
 }
 
 /* Responsive Design */

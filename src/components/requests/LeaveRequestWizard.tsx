@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useHoliday, Holiday } from '../../context/HolidayContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faPaperclip, faCalendarAlt, faFileAlt } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faPaperclip, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 import './LeaveRequestWizard.css';
 
 type LeaveType = 'Annual Leave' | 'Sick Leave' | 'Unpaid Leave' | 'Maternity Leave' | 'Paternity Leave' | 'Bereavement Leave';
@@ -55,6 +55,7 @@ const LeaveRequestWizard: React.FC<LeaveRequestWizardProps> = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // Ensure no event bubbling
     setError(null);
     setSuccess(false);
 
@@ -190,6 +191,7 @@ const LeaveRequestWizard: React.FC<LeaveRequestWizardProps> = () => {
               value="full-day"
               checked={formData.duration === 'full-day'}
               onChange={handleChange}
+              title="Full Day"
             />
             <span>Full Day</span>
           </label>
@@ -200,6 +202,7 @@ const LeaveRequestWizard: React.FC<LeaveRequestWizardProps> = () => {
               value="half-day"
               checked={formData.duration === 'half-day'}
               onChange={handleChange}
+              title="Half Day"
             />
             <span>Half Day</span>
           </label>
@@ -210,6 +213,7 @@ const LeaveRequestWizard: React.FC<LeaveRequestWizardProps> = () => {
               value="multiple-days"
               checked={formData.duration === 'multiple-days'}
               onChange={handleChange}
+              title="Multiple Days"
             />
             <span>Multiple Days</span>
           </label>
@@ -217,32 +221,36 @@ const LeaveRequestWizard: React.FC<LeaveRequestWizardProps> = () => {
       </div>
 
       <div className="form-group">
-        <label>Start Date</label>
+        <label htmlFor="startDate">Start Date</label>
         <div className="input-with-icon">
           <FontAwesomeIcon icon={faCalendarAlt} />
           <input
             type="date"
+            id="startDate"
             name="startDate"
             value={formData.startDate}
             onChange={handleChange}
             required
             min={new Date().toISOString().split('T')[0]}
+            title="Start Date"
           />
         </div>
       </div>
 
       {formData.duration === 'multiple-days' && (
         <div className="form-group">
-          <label>End Date</label>
+          <label htmlFor="endDate">End Date</label>
           <div className="input-with-icon">
             <FontAwesomeIcon icon={faCalendarAlt} />
             <input
               type="date"
+              id="endDate"
               name="endDate"
               value={formData.endDate}
               onChange={handleChange}
               required
               min={formData.startDate || new Date().toISOString().split('T')[0]}
+              title="End Date"
             />
           </div>
         </div>
@@ -259,6 +267,7 @@ const LeaveRequestWizard: React.FC<LeaveRequestWizardProps> = () => {
                 value="morning"
                 checked={formData.halfDayOption === 'morning'}
                 onChange={handleChange}
+                title="Morning (9 AM - 1 PM)"
               />
               <span>Morning (9 AM - 1 PM)</span>
             </label>
@@ -269,6 +278,7 @@ const LeaveRequestWizard: React.FC<LeaveRequestWizardProps> = () => {
                 value="afternoon"
                 checked={formData.halfDayOption === 'afternoon'}
                 onChange={handleChange}
+                title="Afternoon (1 PM - 5 PM)"
               />
               <span>Afternoon (1 PM - 5 PM)</span>
             </label>
@@ -287,62 +297,76 @@ const LeaveRequestWizard: React.FC<LeaveRequestWizardProps> = () => {
     </div>
   );
 
-  const Step3 = () => (
-    <div className="step-content">
-      <h3>Additional Information</h3>
-      
-      <div className="form-group">
-        <label>Notes (Optional)</label>
-        <div className="input-with-icon">
-          <FontAwesomeIcon icon={faFileAlt} />
-          <textarea
-            name="notes"
-            value={formData.notes}
-            onChange={handleChange}
-            placeholder="Add any additional information about your leave request..."
-            rows={4}
-          />
-        </div>
-      </div>
+  const Step3 = () => {
+    const [localNotes, setLocalNotes] = useState(formData.notes);
 
-      <div className="form-group">
-        <label>Attachment (Optional)</label>
-        <div className="file-upload">
-          <label className="file-upload-label">
-            <FontAwesomeIcon icon={faPaperclip} />
-            <span>{formData.attachment ? formData.attachment.name : 'Upload supporting document'}</span>
-            <input
-              type="file"
-              onChange={handleFileChange}
-              accept=".pdf,.doc,.docx,image/*"
-              style={{ display: 'none' }}
+    const handleLocalNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const value = e.target.value;
+      setLocalNotes(value);
+      setFormData(prev => ({ ...prev, notes: value }));
+    };
+
+    return (
+      <div className="step-content">
+        <h3>Additional Information</h3>
+        
+        <div className="form-group">
+          <label htmlFor="notes">Notes (Optional)</label>
+          <div className="textarea-wrapper">
+            <textarea
+              id="notes"
+              name="notes"
+              className="form-control"
+              value={localNotes}
+              onChange={handleLocalNotesChange}
+              placeholder="Add any additional information about your leave request..."
+              maxLength={1000}
+              rows={4}
             />
-          </label>
-          {formData.attachment && (
-            <button 
-              type="button" 
-              className="btn-text"
-              onClick={() => setFormData({...formData, attachment: null})}
-            >
-              Remove
-            </button>
-          )}
+          </div>
+          <small className="text-muted">
+            {localNotes.length}/1000 characters
+          </small>
         </div>
-        <small className="text-muted">
-          Upload supporting documents like medical certificates (PDF, DOC, JPG, PNG up to 5MB)
-        </small>
-      </div>
 
-      <div className="form-actions">
-        <button type="button" className="btn btn-outline" onClick={prevStep}>
-          <FontAwesomeIcon icon={faArrowLeft} /> Back
-        </button>
-        <button type="submit" className="btn btn-primary">
-          Submit Request
-        </button>
+        <div className="form-group">
+          <label>Attachment (Optional)</label>
+          <div className="file-upload">
+            <label className="file-upload-label">
+              <FontAwesomeIcon icon={faPaperclip} />
+              <span>{formData.attachment ? formData.attachment.name : 'Upload supporting document'}</span>
+              <input
+                type="file"
+                onChange={handleFileChange}
+                accept=".pdf,.doc,.docx,image/*"
+              />
+            </label>
+            {formData.attachment && (
+              <button 
+                type="button" 
+                className="btn-text"
+                onClick={() => setFormData({...formData, attachment: null})}
+              >
+                Remove
+              </button>
+            )}
+          </div>
+          <small className="text-muted">
+            Upload supporting documents like medical certificates (PDF, DOC, JPG, PNG up to 5MB)
+          </small>
+        </div>
+
+        <div className="form-actions">
+          <button type="button" className="btn btn-outline" onClick={prevStep}>
+            <FontAwesomeIcon icon={faArrowLeft} /> Back
+          </button>
+          <button type="submit" className="btn btn-primary">
+            Submit Request
+          </button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const steps = [
     { number: 1, label: 'Leave Type' },

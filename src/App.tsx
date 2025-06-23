@@ -17,7 +17,8 @@ import {
   faPlusCircle, 
   faHome,
   faBars,
-  faTimes
+  faTimes,
+  faArrowRight
 } from '@fortawesome/free-solid-svg-icons';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { HolidayProvider, useHoliday } from './context/HolidayContext';
@@ -42,9 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, onClose })
   const { holidays } = useHoliday();
   const { user, logout } = useAuth();
   
-  if (!user) {
-    return null; // Don't render sidebar if user is not logged in
-  }
+  if (!user) return null;
 
   // Helper to count inclusive day span between two dates
   const getDaysInclusive = (start: string | Date, end: string | Date) => {
@@ -61,125 +60,98 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, onClose })
 
   const ALLOWANCE = 25; // annual allowance, adjust as needed
   const remainingHolidays = ALLOWANCE - takenHolidays;
-  const leavePercentage = Math.round((takenHolidays / ALLOWANCE) * 100);
   
-  const userStats = [
-    { 
-      value: remainingHolidays, 
-      label: 'Remaining',
-      icon: '🕒',
-      color: '#4CAF50',
-      total: ALLOWANCE
-    },
-    { 
-      value: takenHolidays, 
-      label: 'Taken',
-      icon: '✅',
-      color: '#2196F3',
-      total: ALLOWANCE
-    },
-    { 
-      value: '0.0', 
-      label: 'Flexi Time',
-      icon: '⏱️',
-      color: '#9C27B0',
-      total: 10
-    }
+  const navItems = [
+    { id: 'dashboard', icon: faHome, label: 'Dashboard', path: '/' },
+    { id: 'new-request', icon: faPlusCircle, label: 'New Request', path: '/new-request' },
+    { id: 'calendar', icon: faCalendarAlt, label: 'Calendar', path: '/calendar' },
+    { id: 'my-requests', icon: faFileAlt, label: 'My Requests', path: '/my-requests' },
   ];
 
-  const handleNavigation = (view: string) => {
-    setActiveView(view);
-    navigate(view === 'dashboard' ? '/' : `/${view}`);
-    if (onClose) onClose();
-  };
-
-  const handleLogout = () => {
-    if (window.confirm('Are you sure you want to log out?')) {
-      logout();
-      navigate('/');
-    }
-  };
-
   return (
-    <div className="sidebar">
-      <div className="profile-section">
-        <div className="profile-bg" />
-        <div className="user-info">
-          <div className="avatar-container">
-            {user.picture ? (
-              <img src={user.picture} alt={user.name} className="user-avatar" />
-            ) : (
-              <div className="avatar-placeholder">
-                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-              </div>
-            )}
-          </div>
-          <div className="user-details">
-            <h3 className="user-name">
-              {user.name || user.email.split('@')[0]}
-            </h3>
-            <span className="user-email">{user.email}</span>
-          </div>
-        </div>
-        
-        <div className="stats-grid">
-          {userStats.map((stat, index) => (
-            <div key={index} className="stat-card">
-              <div className="stat-icon" style={{ backgroundColor: `${stat.color}15` }}>
-                {stat.icon}
-              </div>
-              <div className="stat-content">
-                <span className="stat-value">{stat.value}</span>
-                <span className="stat-label">{stat.label}</span>
-              </div>
+    <aside className="fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-xl flex flex-col transition-transform duration-300 ease-in-out z-40">
+      {/* Profile Section */}
+      <div className="p-6 border-b border-gray-700">
+        <div className="flex items-center space-x-4">
+          {user.picture ? (
+            <img 
+              src={user.picture} 
+              alt={user.name} 
+              className="w-12 h-12 rounded-full border-2 border-blue-400"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-xl font-semibold">
+              {user.name?.charAt(0) || user.email.charAt(0)}
             </div>
-          ))}
-        </div>
-        
-        <div className="leave-progress">
-          <div className="progress-header">
-            <span>Leave Usage</span>
-            <span>{takenHolidays}/{ALLOWANCE} days</span>
+          )}
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-semibold truncate">{user.name || user.email.split('@')[0]}</h2>
+            <p className="text-sm text-gray-400 truncate">{user.email}</p>
           </div>
-          <div className="progress-bar">
+        </div>
+      </div>
+
+      {/* Leave Summary */}
+      <div className="p-6 border-b border-gray-700 bg-gray-800/50">
+        <div className="space-y-4">
+          <div className="flex justify-between items-center text-sm">
+            <span>Leave Balance</span>
+            <span className="font-semibold">{remainingHolidays}/{ALLOWANCE} days</span>
+          </div>
+          <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
             <div 
-              className="progress-fill" 
-              style={{ 
-                width: `${Math.min(100, leavePercentage)}%`,
-                backgroundColor: leavePercentage > 80 ? '#FF5722' : '#4CAF50'
-              }}
+              className="h-full bg-blue-500 transition-all duration-500"
+              style={{ width: `${(takenHolidays / ALLOWANCE) * 100}%` }}
             />
           </div>
         </div>
       </div>
 
-      <div className="nav-buttons">
-        {[
-          { id: 'dashboard', icon: faHome, label: 'Dashboard' },
-          { id: 'new-request', icon: faPlusCircle, label: 'New Request' },
-          { id: 'calendar', icon: faCalendarAlt, label: 'Calendar' },
-          { id: 'my-requests', icon: faFileAlt, label: 'My Requests' },
-        ].map((item) => (
+      {/* Navigation */}
+      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+        {navItems.map(item => (
           <button
             key={item.id}
-            className={`nav-button ${activeView === item.id ? 'active' : ''}`}
-            onClick={() => handleNavigation(item.id)}
+            onClick={() => {
+              setActiveView(item.id);
+              navigate(item.path);
+              if (onClose) onClose();
+            }}
+            className={`w-full flex items-center px-4 py-3 text-sm rounded-lg transition-all duration-200
+              ${activeView === item.id 
+                ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25' 
+                : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
           >
-            <FontAwesomeIcon icon={item.icon} className="nav-icon" />
-            <span className="nav-label">{item.label}</span>
-            <div className="active-indicator" />
+            <FontAwesomeIcon icon={item.icon} className={`w-5 h-5 ${activeView === item.id ? 'text-white' : 'text-gray-400'}`} />
+            <span className="ml-3 font-medium">{item.label}</span>
+            {activeView === item.id && (
+              <span className="ml-auto">
+                <FontAwesomeIcon icon={faArrowRight} className="w-4 h-4" />
+              </span>
+            )}
           </button>
         ))}
-      </div>
+      </nav>
 
-      <div className="sidebar-footer">
-        <button className="logout-button" onClick={handleLogout}>
-          <FontAwesomeIcon icon={faSignOutAlt} className="logout-icon" />
-          <span>Sign Out</span>
+      {/* Footer */}
+      <div className="p-6 border-t border-gray-700">
+        <button
+          onClick={() => {
+            if (window.confirm('Are you sure you want to log out?')) {
+              logout();
+              navigate('/');
+            }
+          }}
+          className="w-full flex items-center px-4 py-3 text-sm text-gray-300 rounded-lg hover:bg-gray-800 hover:text-white transition-colors duration-200"
+        >
+          <FontAwesomeIcon icon={faSignOutAlt} className="w-5 h-5" />
+          <span className="ml-3 font-medium">Sign Out</span>
         </button>
-        <div className="app-version">v1.0.0</div>
+        <div className="mt-4 text-center text-xs text-gray-500">
+          v1.0.0
+        </div>
       </div>
-    </div>
+    </aside>
   );
 };
 
