@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowRight, faArrowLeft, faCheck } from '@fortawesome/free-solid-svg-icons';
 
@@ -19,7 +18,6 @@ const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete, user }) => {
   const [workingDays, setWorkingDays] = useState<number[]>([1, 2, 3, 4, 5]); // Monday to Friday
   const [department, setDepartment] = useState('');
   const [managerEmail, setManagerEmail] = useState('');
-  const navigate = useNavigate();
 
   const handleNext = () => {
     if (step < 3) {

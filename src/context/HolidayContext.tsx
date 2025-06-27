@@ -1,20 +1,13 @@
-﻿import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from 'react';
+﻿/* eslint-disable unicode-bom */
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
+import { cosmosDbService } from '../services/cosmosDb';
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   Types
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export interface Holiday {
   id: string;
   title: string;
-  start: string; // ISO date
-  end: string;   // ISO date (inclusive if all-day, otherwise exclusive)
+  start: string;
+  end: string;
   allDay?: boolean;
   backgroundColor?: string;
   borderColor?: string;
@@ -26,80 +19,84 @@ export interface Holiday {
     requestedAt?: string;
     requestedBy?: string | null;
     approvedAt?: string | null;
-    rejectedAt?: string | null;
     approvedBy?: string | null;
+    rejectedAt?: string | null;
     rejectedBy?: string | null;
   };
 }
 
 interface HolidayContextType {
   holidays: Holiday[];
-  addHoliday: (holiday: Omit<Holiday, 'id'>) => void;
-  removeHoliday: (id: string) => void;
-  updateHoliday: (id: string, updates: Partial<Holiday>) => void;
+  addHoliday: (holiday: Holiday) => Promise<void>;
+  removeHoliday: (id: string) => Promise<void>;
+  updateHoliday: (holiday: Holiday) => Promise<void>;
 }
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   Context
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const HolidayContext = createContext<HolidayContextType | undefined>(
   undefined,
 );
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   Provider
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export const HolidayProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const { user } = useAuth();
-  
   const [holidays, setHolidays] = useState<Holiday[]>([]);
-  
-  // Load holidays when user changes
-  useEffect(() => {
+
+  const loadHolidays = useCallback(async () => {
     if (user) {
       try {
-        const stored = localStorage.getItem(`holidays_${user.email}`);
-        setHolidays(stored ? (JSON.parse(stored) as Holiday[]) : []);
-      } catch {
+        const data = await cosmosDbService.getUserData(user.email, 'holiday');
+        setHolidays(data || []);
+      } catch (error) {
+        console.error('Error loading holidays:', error);
         setHolidays([]);
       }
-    } else {
-      setHolidays([]);
     }
   }, [user]);
 
-  /* CRUD helpers */
-  const addHoliday = (holiday: Omit<Holiday, 'id'>) => {
-    const newHoliday: Holiday = {
-      ...holiday,
-      id:
-        typeof crypto !== 'undefined' && 'randomUUID' in crypto
-          ? crypto.randomUUID()
-          : Math.random().toString(36).slice(2),
-    };
-    setHolidays((prev) => [...prev, newHoliday]);
-  };
-
-  const removeHoliday = (id: string) =>
-    setHolidays((prev) => prev.filter((h) => h.id !== id));
-
-  const updateHoliday = (id: string, updates: Partial<Holiday>) =>
-    setHolidays((prev) =>
-      prev.map((h) => (h.id === id ? { ...h, ...updates } : h)),
-    );
-
-  /* Persist on every change */
+  // Load holidays when user changes
   useEffect(() => {
     if (user) {
-      try {
-        localStorage.setItem(`holidays_${user.email}`, JSON.stringify(holidays));
-      } catch {
-        /* ignore storage failures */
-      }
+      loadHolidays();
+    } else {
+      setHolidays([]);
     }
-  }, [holidays, user]);
+  }, [user, loadHolidays]);
+
+  const addHoliday = async (newHoliday: Holiday) => {
+    if (!user) return;
+    try {
+      const updatedHolidays = [...holidays, newHoliday];
+      await cosmosDbService.saveData(user.email, 'holiday', updatedHolidays);
+      setHolidays(updatedHolidays);
+    } catch (error) {
+      console.error('Error adding holiday:', error);
+    }
+  };
+
+  const updateHoliday = async (updatedHoliday: Holiday) => {
+    if (!user) return;
+    try {
+      const updatedHolidays = holidays.map(h => 
+        h.id === updatedHoliday.id ? updatedHoliday : h
+      );
+      await cosmosDbService.saveData(user.email, 'holiday', updatedHolidays);
+      setHolidays(updatedHolidays);
+    } catch (error) {
+      console.error('Error updating holiday:', error);
+    }
+  };
+
+  const removeHoliday = async (holidayId: string) => {
+    if (!user) return;
+    try {
+      const updatedHolidays = holidays.filter(h => h.id !== holidayId);
+      await cosmosDbService.saveData(user.email, 'holiday', updatedHolidays);
+      setHolidays(updatedHolidays);
+    } catch (error) {
+      console.error('Error deleting holiday:', error);
+    }
+  };
 
   return (
     <HolidayContext.Provider
@@ -110,9 +107,6 @@ export const HolidayProvider: React.FC<{ children: ReactNode }> = ({
   );
 };
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   Hook
-   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export const useHoliday = (): HolidayContextType => {
   const ctx = useContext(HolidayContext);
   if (!ctx)

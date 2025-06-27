@@ -278,3 +278,19 @@ a:hover {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-gray-400);
 }
+
+/* Leave Balance Progress */
+.leave-balance-progress {
+  @apply h-full bg-blue-500 transition-all duration-500;
+  width: var(--progress-width, 0%);
+}
+
+/* Progress Bar */
+.progress-bar {
+  @apply h-2 bg-gray-700 rounded-full overflow-hidden;
+}
+
+.progress-bar__fill {
+  @apply h-full bg-blue-500 transition-all duration-500 origin-left;
+  transform: scaleX(var(--progress-value));
+}

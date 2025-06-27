@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useHoliday } from '../../context/HolidayContext';
+import { useHoliday, Holiday } from '../../context/HolidayContext';
+import { useAuth } from '../../context/AuthContext';
 import './NewRequest.css';
 
 type LeaveType = 'Annual Leave' | 'Sick Leave' | 'Unpaid Leave';
 
 const NewRequest: React.FC = () => {
   const { addHoliday } = useHoliday();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const [startDate, setStartDate] = useState('');
@@ -18,22 +20,31 @@ const NewRequest: React.FC = () => {
     e.preventDefault();
     if (!startDate || !endDate) return;
 
-    addHoliday({
-      title: `${leaveType} Request`,
-      start: startDate,
-      end: endDate,
-      allDay,
-      backgroundColor: leaveType === 'Sick Leave' ? '#d4edda' : 
-                     leaveType === 'Unpaid Leave' ? '#f8d7da' : '#f8bbd0',
-      borderColor: leaveType === 'Sick Leave' ? '#c3e6cb' : 
-                  leaveType === 'Unpaid Leave' ? '#f5c6cb' : '#f8bbd0',
-      extendedProps: {
-        type: leaveType.toLowerCase().replace(' ', '-'),
-        status: 'pending',
-      },
-    });
+    try {
+      const newHoliday: Holiday = {
+        id: `holiday-${Date.now()}`,
+        title: `${leaveType} Request`,
+        start: startDate,
+        end: endDate,
+        allDay,
+        backgroundColor: leaveType === 'Sick Leave' ? '#d4edda' : 
+                       leaveType === 'Unpaid Leave' ? '#f8d7da' : '#f8bbd0',
+        borderColor: leaveType === 'Sick Leave' ? '#c3e6cb' : 
+                    leaveType === 'Unpaid Leave' ? '#f5c6cb' : '#f8bbd0',
+        extendedProps: {
+          type: leaveType.toLowerCase().replace(' ', '-'),
+          status: 'pending' as const,
+          requestedAt: new Date().toISOString(),
+          requestedBy: user?.email || null,
+        },
+      };
+      
+      addHoliday(newHoliday);
 
-    navigate('/my-requests');
+      navigate('/my-requests');
+    } catch (error) {
+      console.error('Error adding holiday:', error);
+    }
   };
 
   return (
@@ -47,6 +58,8 @@ const NewRequest: React.FC = () => {
             value={leaveType}
             onChange={(e) => setLeaveType(e.target.value as LeaveType)}
             required
+            title="Leave Type"
+            aria-label="Leave Type"
           >
             <option value="Annual Leave">Annual Leave</option>
             <option value="Sick Leave">Sick Leave</option>
@@ -60,6 +73,8 @@ const NewRequest: React.FC = () => {
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             required
+            title="Start Date"
+            aria-label="Start Date"
           />
         </div>
         <div className="form-group">
@@ -69,6 +84,8 @@ const NewRequest: React.FC = () => {
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             required
+            title="End Date"
+            aria-label="End Date"
           />
         </div>
         <div className="form-group form-check">

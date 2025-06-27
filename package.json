@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "@azure/cosmos": "^4.4.1",
+    "@azure/identity": "^4.10.1",
+    "@azure/msal-browser": "^4.13.2",
+    "@azure/msal-react": "^3.0.13",
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
@@ -33,7 +37,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "deploy": "npm run build && swa deploy --env production"
   },
   "eslintConfig": {
     "extends": [
@@ -63,5 +68,8 @@
     "typescript"
   ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@azure/static-web-apps-cli": "^2.0.6"
+  }
 }

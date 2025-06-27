@@ -3,12 +3,12 @@ import {
   BrowserRouter as Router, 
   Routes, 
   Route, 
-  Navigate, 
-  useNavigate,
-  useLocation,
-  Link
+  Navigate,
+  useNavigate
 } from 'react-router-dom';
-import { GoogleOAuthProvider } from '@react-oauth/google';
+import { MsalProvider } from '@azure/msal-react';
+import { PublicClientApplication, EventType, AuthenticationResult } from '@azure/msal-browser';
+import { msalConfig } from './config/azure-config';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faCalendarAlt, 
@@ -16,8 +16,6 @@ import {
   faSignOutAlt, 
   faPlusCircle, 
   faHome,
-  faBars,
-  faTimes,
   faArrowRight
 } from '@fortawesome/free-solid-svg-icons';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -98,10 +96,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, onClose })
             <span>Leave Balance</span>
             <span className="font-semibold">{remainingHolidays}/{ALLOWANCE} days</span>
           </div>
-          <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+          <div className="progress-bar">
             <div 
-              className="h-full bg-blue-500 transition-all duration-500"
-              style={{ width: `${(takenHolidays / ALLOWANCE) * 100}%` }}
+              className="progress-bar__fill"
+              data-progress={takenHolidays / ALLOWANCE}
+              onLoad={(e) => {
+                (e.target as HTMLElement).style.setProperty('--progress-value', String(takenHolidays / ALLOWANCE));
+              }}
             />
           </div>
         </div>
@@ -155,15 +156,29 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, onClose })
   );
 };
 
-// Type for Google OAuth credential response
-interface CredentialResponse {
-  credential?: string;
-  clientId?: string;
-  select_by?: string;
-};
+// Create MSAL instance before any components
+const msalInstance = new PublicClientApplication(msalConfig);
+
+// Initialize MSAL instance
+msalInstance.initialize().then(() => {
+  // Handle redirect promise for authentication
+  msalInstance.handleRedirectPromise().catch((error) => {
+    console.error('Error handling redirect:', error);
+  });
+});
+
+// Add event callback for successful logins
+msalInstance.addEventCallback((event) => {
+  if (event.eventType === EventType.LOGIN_SUCCESS) {
+    const result = event.payload as AuthenticationResult;
+    if (result?.account) {
+      msalInstance.setActiveAccount(result.account);
+    }
+  }
+});
 
 const AppContent = () => {
-  const { user, logout, completeSetup } = useAuth();
+  const { user, completeSetup } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [activeView, setActiveView] = useState('dashboard');
@@ -180,6 +195,7 @@ const AppContent = () => {
   const handleSetupComplete = () => {
     completeSetup();
     setShowSetupWizard(false);
+    navigate('/dashboard');
   };
 
   // Check if mobile view
@@ -205,30 +221,6 @@ const AppContent = () => {
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
-  
-  // Handle navigation
-  const handleNavigation = (view: string, path: string) => {
-    setActiveView(view);
-    navigate(path);
-    if (isMobile) {
-      setSidebarOpen(false);
-    }
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
-  const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
-
-  if (!clientId) {
-    return (
-      <div style={{ padding: '20px', color: 'red' }}>
-        Error: Google Client ID is not configured. Please set REACT_APP_GOOGLE_CLIENT_ID in your .env file.
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -239,105 +231,111 @@ const AppContent = () => {
           user={{ name: user.name, email: user.email }}
         />
       )}
-      {/* Mobile sidebar backdrop */}
-      {isMobile && sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-20"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
       
-      {/* Sidebar */}
-      <div 
-        className={`
-          fixed md:relative z-30 w-72 h-screen bg-white shadow-lg transform transition-transform duration-300 ease-in-out
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        `}
-      >
-        <Sidebar onClose={isMobile ? () => setSidebarOpen(false) : undefined} activeView={activeView} setActiveView={setActiveView} />
-      </div>
-      
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top header */}
-        <header className="bg-white shadow-sm z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-            <button 
-              onClick={toggleSidebar}
-              className="md:hidden p-2 rounded-md text-gray-500 hover:bg-gray-100 focus:outline-none"
-              aria-label="Toggle sidebar"
-            >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <div className="flex-1 flex justify-between items-center">
-              <h1 className="text-xl font-semibold text-gray-900">Holiday Tracker</h1>
-              <div className="ml-4 flex items-center">
-                {user && (
-                  <div className="flex items-center">
-                    <span className="text-sm font-medium text-gray-700 mr-3">
-                      {user.name || user.email}
-                    </span>
-                    <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
-                      {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
-                    </div>
+      {/* Rest of the UI */}
+      {!showSetupWizard && (
+        <>
+          {/* Mobile sidebar backdrop */}
+          {isMobile && sidebarOpen && (
+            <div 
+              className="fixed inset-0 bg-black bg-opacity-50 z-20"
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+          
+          {/* Sidebar */}
+          <div 
+            className={`
+              fixed md:relative z-30 w-72 h-screen bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+              ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+            `}
+          >
+            <Sidebar onClose={isMobile ? () => setSidebarOpen(false) : undefined} activeView={activeView} setActiveView={setActiveView} />
+          </div>
+          
+          {/* Main content */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Top header */}
+            <header className="bg-white shadow-sm z-10">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+                <button 
+                  onClick={toggleSidebar}
+                  className="md:hidden p-2 rounded-md text-gray-500 hover:bg-gray-100 focus:outline-none"
+                  aria-label="Toggle sidebar"
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+                <div className="flex-1 flex justify-between items-center">
+                  <h1 className="text-xl font-semibold text-gray-900">Holiday Tracker</h1>
+                  <div className="ml-4 flex items-center">
+                    {user && (
+                      <div className="flex items-center">
+                        <span className="text-sm font-medium text-gray-700 mr-3">
+                          {user.name || user.email}
+                        </span>
+                        <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
+                          {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
-            </div>
+            </header>
+            
+            {/* Page content */}
+            <main className="flex-1 overflow-y-auto focus:outline-none bg-gray-50">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <Routes>
+                  <Route path="/login" element={
+                    user ? <Navigate to="/dashboard" /> : <Login />
+                  } />
+                  <Route path="/" element={
+                    user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />
+                  } />
+                  <Route path="/dashboard" element={
+                    <PrivateRoute>
+                      <Dashboard />
+                    </PrivateRoute>
+                  } />
+                  <Route path="/calendar" element={
+                    <PrivateRoute>
+                      <CalendarView />
+                    </PrivateRoute>
+                  } />
+                  <Route path="/my-requests" element={
+                    <PrivateRoute>
+                      <MyRequests />
+                    </PrivateRoute>
+                  } />
+                  <Route path="/new-request" element={
+                    <PrivateRoute>
+                      <LeaveRequestWizard />
+                    </PrivateRoute>
+                  } />
+                </Routes>
+              </div>
+            </main>
           </div>
-        </header>
-        
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto focus:outline-none bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <Routes>
-              <Route path="/login" element={
-                user ? <Navigate to="/dashboard" /> : <Login />
-              } />
-              <Route path="/" element={
-                <PrivateRoute>
-                  <Navigate to="/dashboard" replace />
-                </PrivateRoute>
-              } />
-              <Route path="/dashboard" element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              } />
-              <Route path="/calendar" element={
-                <PrivateRoute>
-                  <CalendarView />
-                </PrivateRoute>
-              } />
-              <Route path="/my-requests" element={
-                <PrivateRoute>
-                  <MyRequests />
-                </PrivateRoute>
-              } />
-              <Route path="/new-request" element={
-                <PrivateRoute>
-                  <LeaveRequestWizard />
-                </PrivateRoute>
-              } />
-            </Routes>
-          </div>
-        </main>
-      </div>
+        </>
+      )}
     </div>
   );
-};
+}
 
 function App() {
   return (
-    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
-      <AuthProvider>
-        <HolidayProvider>
-          <AppContent />
-        </HolidayProvider>
-      </AuthProvider>
-    </GoogleOAuthProvider>
+    <MsalProvider instance={msalInstance}>
+      <Router>
+        <AuthProvider>
+          <HolidayProvider>
+            <AppContent />
+          </HolidayProvider>
+        </AuthProvider>
+      </Router>
+    </MsalProvider>
   );
 }
 

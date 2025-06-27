@@ -57,30 +57,34 @@ const MyRequests: React.FC = () => {
     setExpandedRequest(expandedRequest === id ? null : id);
   };
 
-  const handleConfirm = (id: string, currentExt: Holiday['extendedProps']) => {
-    updateHoliday(id, { 
-      extendedProps: { 
-        ...currentExt, 
-        status: 'approved',
+  const handleConfirm = (id: string, currentExt: Holiday['extendedProps'], holiday: Holiday) => {
+    const updatedHoliday: Holiday = {
+      ...holiday,
+      extendedProps: {
+        ...currentExt,
+        status: 'approved' as const,
         approvedAt: new Date().toISOString(),
         approvedBy: user?.name || 'System',
         rejectedAt: null,
         rejectedBy: null
-      } 
-    });
+      }
+    };
+    updateHoliday(updatedHoliday);
   };
 
-  const handleReject = (id: string, currentExt: Holiday['extendedProps']) => {
-    updateHoliday(id, { 
-      extendedProps: { 
-        ...currentExt, 
-        status: 'rejected',
+  const handleReject = (id: string, currentExt: Holiday['extendedProps'], holiday: Holiday) => {
+    const updatedHoliday: Holiday = {
+      ...holiday,
+      extendedProps: {
+        ...currentExt,
+        status: 'rejected' as const,
         rejectedAt: new Date().toISOString(),
         rejectedBy: user?.name || 'System',
         approvedAt: null,
         approvedBy: null
-      } 
-    });
+      }
+    };
+    updateHoliday(updatedHoliday);
   };
 
   const handleCancel = (id: string) => {
@@ -205,10 +209,7 @@ const MyRequests: React.FC = () => {
                     </div>
                     
                     <div className="request-status">
-                      <span 
-                        className="status-badge"
-                        style={{ backgroundColor: statusIcon.color }}
-                      >
+                      <span className={`status-badge ${holiday.extendedProps.status}`}>
                         <FontAwesomeIcon icon={statusIcon.icon} />
                         {holiday.extendedProps.status.charAt(0).toUpperCase() + holiday.extendedProps.status.slice(1)}
                       </span>
@@ -221,7 +222,7 @@ const MyRequests: React.FC = () => {
                             className="btn-icon approve"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleConfirm(holiday.id, holiday.extendedProps);
+                              handleConfirm(holiday.id, holiday.extendedProps, holiday);
                             }}
                             title="Approve"
                           >
@@ -231,7 +232,7 @@ const MyRequests: React.FC = () => {
                             className="btn-icon reject"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleReject(holiday.id, holiday.extendedProps);
+                              handleReject(holiday.id, holiday.extendedProps, holiday);
                             }}
                             title="Reject"
                           >
@@ -317,13 +318,15 @@ const MyRequests: React.FC = () => {
                           <div className="detail-label">
                             <FontAwesomeIcon icon={faPaperclip} /> Attachment:
                           </div>
-                          <a 
-                            href="#" 
+                          <button 
                             className="attachment-link"
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Add attachment handling logic here
+                            }}
                           >
                             {holiday.extendedProps.attachment}
-                          </a>
+                          </button>
                         </div>
                       )}
                     </div>

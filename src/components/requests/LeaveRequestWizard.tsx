@@ -60,7 +60,6 @@ const LeaveRequestWizard: React.FC<LeaveRequestWizardProps> = () => {
     setSuccess(false);
 
     try {
-      const leaveTitle = `${formData.leaveType} Request`;
       const startDate = new Date(formData.startDate);
       const endDate = formData.duration === 'multiple-days' ? new Date(formData.endDate) : startDate;
 
@@ -85,8 +84,9 @@ const LeaveRequestWizard: React.FC<LeaveRequestWizardProps> = () => {
         }
       }
 
-      const newHoliday: Omit<Holiday, 'id'> = {
-        title: leaveTitle,
+      const newHoliday: Holiday = {
+        id: `holiday-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        title: `${formData.leaveType} Request`,
         start: startDate.toISOString(),
         end: endDate.toISOString(),
         allDay: formData.duration === 'full-day' || formData.duration === 'multiple-days',
@@ -94,11 +94,11 @@ const LeaveRequestWizard: React.FC<LeaveRequestWizardProps> = () => {
         borderColor: getLeaveTypeBorderColor(formData.leaveType),
         extendedProps: {
           type: formData.leaveType.toLowerCase().replace(' ', '-'),
-          status: 'pending',
+          status: 'pending' as const,
           notes: formData.notes,
           attachment: formData.attachment ? formData.attachment.name : null,
           requestedAt: new Date().toISOString(),
-          requestedBy: user?.name || 'System',
+          requestedBy: user?.email || null,
           approvedAt: null,
           approvedBy: null,
           rejectedAt: null,

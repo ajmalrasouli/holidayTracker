@@ -147,20 +147,24 @@ h2 {
 }
 
 .status-badge {
-  display: inline-flex;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  text-transform: capitalize;
-  background: #f0f9ff;
-  color: #0369a1;
+  gap: 0.5rem;
+  font-size: 0.875rem;
 }
 
-.status-badge svg {
-  font-size: 0.9em;
+.status-badge.pending {
+  background-color: #ffc107;
+}
+
+.status-badge.approved {
+  background-color: #28a745;
+}
+
+.status-badge.rejected {
+  background-color: #dc3545;
 }
 
 .request-actions {
@@ -286,21 +290,6 @@ h2 {
 
 .request-card.rejected {
   border-left: 4px solid #f56565;
-}
-
-.status-badge.pending {
-  background-color: #fefcbf;
-  color: #975a16;
-}
-
-.status-badge.approved {
-  background-color: #c6f6d5;
-  color: #22543d;
-}
-
-.status-badge.rejected {
-  background-color: #fed7d7;
-  color: #9b2c2c;
 }
 
 /* Buttons */
